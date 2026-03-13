@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model categorias {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @db.VarChar(100)
+  productos productos[]
+}
+
+model clientes {
+  id              Int               @id @default(autoincrement())
+  nombre          String            @db.VarChar(100)
+  ciudad          String            @db.VarChar(100)
+  estado          String            @db.VarChar(50)
+  ordenes         ordenes[]
+  tickets_soporte tickets_soporte[]
+}
+
+model detalle_orden {
+  id              Int        @id @default(autoincrement())
+  orden_id        Int?
+  producto_id     Int?
+  cantidad        Int
+  precio_unitario Decimal    @db.Decimal(10, 2)
+  ordenes         ordenes?   @relation(fields: [orden_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  productos       productos? @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ordenes {
+  id            Int             @id @default(autoincrement())
+  fecha         DateTime        @default(now()) @db.Timestamp(6)
+  cliente_id    Int?
+  ciudad        String          @db.VarChar(100)
+  estado        String          @db.VarChar(50)
+  total         Decimal         @db.Decimal(10, 2)
+  detalle_orden detalle_orden[]
+  clientes      clientes?       @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model productos {
+  id            Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(100)
+  precio        Decimal         @db.Decimal(10, 2)
+  categoria_id  Int?
+  detalle_orden detalle_orden[]
+  categorias    categorias?     @relation(fields: [categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tickets_soporte {
+  id         Int       @id @default(autoincrement())
+  fecha      DateTime  @default(now()) @db.Timestamp(6)
+  cliente_id Int?
+  categoria  String    @db.VarChar(100)
+  prioridad  String    @db.VarChar(50)
+  estado     String    @db.VarChar(50)
+  agente     String?   @db.VarChar(100)
+  clientes   clientes? @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
