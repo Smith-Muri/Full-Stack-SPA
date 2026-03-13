@@ -7,58 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model categorias {
-  id        Int         @id @default(autoincrement())
-  nombre    String      @db.VarChar(100)
-  productos productos[]
+model categories {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique @db.VarChar(80)
+  products products[]
 }
 
-model clientes {
+model customers {
   id              Int               @id @default(autoincrement())
-  nombre          String            @db.VarChar(100)
-  ciudad          String            @db.VarChar(100)
-  estado          String            @db.VarChar(50)
-  ordenes         ordenes[]
-  tickets_soporte tickets_soporte[]
+  full_name       String            @db.VarChar(120)
+  email           String            @unique @db.VarChar(120)
+  city            String            @db.VarChar(80)
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  orders          orders[]
+  support_tickets support_tickets[]
 }
 
-model detalle_orden {
-  id              Int        @id @default(autoincrement())
-  orden_id        Int?
-  producto_id     Int?
-  cantidad        Int
-  precio_unitario Decimal    @db.Decimal(10, 2)
-  ordenes         ordenes?   @relation(fields: [orden_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  productos       productos? @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int
+  unit_price Decimal  @db.Decimal(10, 2)
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model ordenes {
-  id            Int             @id @default(autoincrement())
-  fecha         DateTime        @default(now()) @db.Timestamp(6)
-  cliente_id    Int?
-  ciudad        String          @db.VarChar(100)
-  estado        String          @db.VarChar(50)
-  total         Decimal         @db.Decimal(10, 2)
-  detalle_orden detalle_orden[]
-  clientes      clientes?       @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id           Int           @id @default(autoincrement())
+  customer_id  Int
+  order_number String        @unique @db.VarChar(30)
+  status       String        @db.VarChar(20)
+  order_date   DateTime      @db.Date
+  created_at   DateTime      @default(now()) @db.Timestamp(6)
+  order_items  order_items[]
+  customers    customers     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model productos {
-  id            Int             @id @default(autoincrement())
-  nombre        String          @db.VarChar(100)
-  precio        Decimal         @db.Decimal(10, 2)
-  categoria_id  Int?
-  detalle_orden detalle_orden[]
-  categorias    categorias?     @relation(fields: [categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model products {
+  id          Int           @id @default(autoincrement())
+  category_id Int
+  name        String        @db.VarChar(120)
+  price       Decimal       @db.Decimal(10, 2)
+  active      Boolean       @default(true)
+  order_items order_items[]
+  categories  categories    @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model tickets_soporte {
-  id         Int       @id @default(autoincrement())
-  fecha      DateTime  @default(now()) @db.Timestamp(6)
-  cliente_id Int?
-  categoria  String    @db.VarChar(100)
-  prioridad  String    @db.VarChar(50)
-  estado     String    @db.VarChar(50)
-  agente     String?   @db.VarChar(100)
-  clientes   clientes? @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model support_tickets {
+  id             Int       @id @default(autoincrement())
+  customer_id    Int
+  category       String    @db.VarChar(40)
+  priority       String    @db.VarChar(20)
+  status         String    @db.VarChar(20)
+  assigned_agent String?   @db.VarChar(100)
+  subject        String    @db.VarChar(150)
+  created_at     DateTime  @default(now()) @db.Timestamp(6)
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

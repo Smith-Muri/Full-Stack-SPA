@@ -10,8 +10,9 @@ import { useOrders, useTickets, useSalesByCategory, useOrdersByDay } from '../ho
 
 export default function Dashboard() {
   const [filters, setFilters] = useState({});
+  const [page, setPage] = useState(1);
 
-  const ordersQuery = useOrders(filters);
+  const ordersQuery = useOrders({ ...filters, page, limit: 10 });
   const ticketsQuery = useTickets(filters);
   const salesQuery = useSalesByCategory(filters);
   const ordersDayQuery = useOrdersByDay(filters);
@@ -42,7 +43,13 @@ export default function Dashboard() {
 
         {/* two tables row */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrdersTable data={ordersQuery.data?.data || []} loading={ordersQuery.isLoading} />
+          <OrdersTable
+            data={ordersQuery.data?.data || []}
+            loading={ordersQuery.isLoading}
+            page={page}
+            setPage={setPage}
+            total={ordersQuery.data?.total || 0}
+          />
           <TicketsTable data={ticketsQuery.data?.data || []} loading={ticketsQuery.isLoading} />
         </div>
 

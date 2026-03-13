@@ -5,41 +5,32 @@ async function salesByCategory(filters) {
   const { startDate, endDate, city, status } = filters;
   const where = {};
   if (startDate || endDate) {
-    where.fecha = {};
-    if (startDate) where.fecha.gte = new Date(startDate);
-    if (endDate) where.fecha.lte = new Date(endDate);
+    where.order_date = {};
+    if (startDate) where.order_date.gte = new Date(startDate);
+    if (endDate) where.order_date.lte = new Date(endDate);
   }
-  if (city) where.ciudad = city;
-  if (status) where.estado = status;
+  if (city) where.customers = { city };
+  if (status) where.status = status;
 
-  // join ordenes -> detalle_orden -> producto -> categoria
-  const result = await prisma.detalle_orden.groupBy({
-    by: ['producto_id'],
-    _sum: { cantidad: true, precio_unitario: true },
+  // Obtener todos los items con productos y categorías
+  const items = await prisma.order_items.findMany({
     where: {
-      ordenes: where,
+      orders: where,
+    },
+    include: {
+      products: {
+        include: { categories: true },
+      },
     },
   });
 
-  // fetch category names
-  const data = await Promise.all(
-    result.map(async (r) => {
-      const producto = await prisma.productos.findUnique({
-        where: { id: r.producto_id },
-        include: { categorias: true },
-      });
-      return {
-        category: producto.categorias.nombre,
-        total: r._sum.precio_unitario || 0,
-      };
-    })
-  );
-
-  // aggregate by category
+  // Agrupar por categoría y sumar cantidad * precio
   const aggregated = {};
-  data.forEach((d) => {
-    if (!aggregated[d.category]) aggregated[d.category] = 0;
-    aggregated[d.category] += d.total;
+  items.forEach((item) => {
+    const category = item.products.categories?.name || 'Sin categoría';
+    const total = Number(item.unit_price) * Number(item.quantity);
+    if (!aggregated[category]) aggregated[category] = 0;
+    aggregated[category] += total;
   });
 
   return Object.entries(aggregated).map(([category, total]) => ({ category, total }));
@@ -49,22 +40,22 @@ async function ordersByDay(filters) {
   const { startDate, endDate, city, status } = filters;
   const where = {};
   if (startDate || endDate) {
-    where.fecha = {};
-    if (startDate) where.fecha.gte = new Date(startDate);
-    if (endDate) where.fecha.lte = new Date(endDate);
+    where.order_date = {};
+    if (startDate) where.order_date.gte = new Date(startDate);
+    if (endDate) where.order_date.lte = new Date(endDate);
   }
-  if (city) where.ciudad = city;
-  if (status) where.estado = status;
+  if (city) where.customers = { city };
+  if (status) where.status = status;
 
-  const result = await prisma.ordenes.groupBy({
-    by: ['fecha'],
+  const result = await prisma.orders.groupBy({
+    by: ['order_date'],
     _count: { id: true },
     where,
   });
 
   // format date only
   return result.map((r) => ({
-    date: r.fecha.toISOString().split('T')[0],
+    date: r.order_date.toISOString().split('T')[0],
     orders: r._count.id,
   }));
 }

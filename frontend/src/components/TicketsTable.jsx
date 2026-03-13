@@ -31,12 +31,12 @@ export default function TicketsTable({ data, loading }) {
         <tbody>
           {data.map((t) => (
             <tr key={t.id} className="border-t hover:bg-gray-50 cursor-pointer">
-              <td className="p-2">{new Date(t.fecha).toLocaleDateString()}</td>
-              <td className="p-2">{t.clientes?.nombre}</td>
-              <td className="p-2">{t.categoria}</td>
-              <td className="p-2">{t.prioridad}</td>
-              <td className="p-2">{t.estado}</td>
-              <td className="p-2">{t.agente}</td>
+              <td className="p-2">{new Date(t.created_at).toLocaleDateString()}</td>
+              <td className="p-2">{t.customers?.full_name}</td>
+              <td className="p-2">{t.category}</td>
+              <td className="p-2">{t.priority}</td>
+              <td className="p-2">{t.status}</td>
+              <td className="p-2">{t.agent}</td>
             </tr>
           ))}
         </tbody>

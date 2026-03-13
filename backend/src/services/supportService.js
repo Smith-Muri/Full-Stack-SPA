@@ -15,24 +15,24 @@ async function getTickets(filters) {
 
   const where = {};
   if (startDate || endDate) {
-    where.fecha = {};
-    if (startDate) where.fecha.gte = new Date(startDate);
-    if (endDate) where.fecha.lte = new Date(endDate);
+    where.created_at = {};
+    if (startDate) where.created_at.gte = new Date(startDate);
+    if (endDate) where.created_at.lte = new Date(endDate);
   }
-  if (status) where.estado = status;
-  if (priority) where.prioridad = priority;
-  if (ticketCategory) where.categoria = ticketCategory;
+  if (status) where.status = status;
+  if (priority) where.priority = priority;
+  if (ticketCategory) where.category = ticketCategory;
 
   const { take, skip } = getPagination(page, limit);
 
   const [data, total] = await Promise.all([
-    prisma.tickets_soporte.findMany({
+    prisma.support_tickets.findMany({
       where,
       skip,
       take,
-      include: { clientes: true },
+      include: { customers: true },
     }),
-    prisma.tickets_soporte.count({ where }),
+    prisma.support_tickets.count({ where }),
   ]);
 
   return { data, total };
